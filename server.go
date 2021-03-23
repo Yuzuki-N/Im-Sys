@@ -48,20 +48,16 @@ func (server *Server) ListenMessager() {
 }
 
 func (server *Server) Handler(conn net.Conn) {
-	user := NewUser(conn)
+	user := NewUser(conn, server)
 
-	server.mapLock.Lock()
-	server.OnlineMap[user.Name] = user
-	server.mapLock.Unlock()
-
-	server.Broadcast(user, "已上线")
+	user.Online()
 
 	go func() {
 		buf := make([]byte, 4096)
 		for {
 			n, err := conn.Read(buf)
 			if n == 0 {
-				server.Broadcast(user, "下线了")
+				user.Offline()
 				return 
 			}
 			
@@ -71,11 +67,11 @@ func (server *Server) Handler(conn net.Conn) {
 			}
 
 			msg := string(buf[:n-1])
-			server.Broadcast(user, msg)
+			user.DoMessage(msg)
 		}
 	}()
 
-	select { }
+	select {}
 }
 
 func (server *Server) Start() {
