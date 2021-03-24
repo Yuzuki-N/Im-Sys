@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 	"io"
+	"time"
 )
 
 type Server struct {
@@ -52,6 +53,8 @@ func (server *Server) Handler(conn net.Conn) {
 
 	user.Online()
 
+	isLive := make(chan bool)
+
 	go func() {
 		buf := make([]byte, 4096)
 		for {
@@ -68,10 +71,21 @@ func (server *Server) Handler(conn net.Conn) {
 
 			msg := string(buf[:n-1])
 			user.DoMessage(msg)
+
+			isLive <- true
 		}
 	}()
+	for {
+		select {
+		case <- isLive:
+		case <- time.After(time.Second * 10): 
+			user.SendMsg("你超时被T了")
+			close(user.C)
+			conn.Close()
+			return //runtime.Goexit()
+		}
 
-	select {}
+	}
 }
 
 func (server *Server) Start() {
