@@ -84,6 +84,27 @@ func (user *User) DoMessage(msg string) {
 			user.SendMsg("修改用户名为" + user.Name + "\n")
 		}
 
+	} else if len(msg) > 4 && msg[:3] == "to|" {
+		remoteName := strings.Split(msg, "|")[1]
+
+		if remoteName == "" {
+			user.SendMsg("消息格式不正确，请使用 \"to|用户名|消息内容 这样的格式\"\n")
+			return 
+		}
+		
+		remoteUser, ok := user.server.OnlineMap[remoteName]; 
+		if !ok {
+			user.SendMsg("该用户名不存在")
+			return
+		}
+
+		content := strings.Split(msg, "|")[2]
+		if content == "" {
+			user.SendMsg("无消息内容， 请重发")
+			return
+		}
+		remoteUser.SendMsg(user.Name + "对您说" + content + "\n")
+
 	} else {
 		user.server.Broadcast(user, msg)
 	}

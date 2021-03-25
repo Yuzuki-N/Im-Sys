@@ -78,7 +78,7 @@ func (server *Server) Handler(conn net.Conn) {
 	for {
 		select {
 		case <- isLive:
-		case <- time.After(time.Second * 10): 
+		case <- time.After(time.Second * 600): 
 			user.SendMsg("你超时被T了")
 			close(user.C)
 			conn.Close()
